@@ -1,0 +1,61 @@
+---
+title: "BPD_Calculo"
+author: "DLA"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(janitor)
+library(readxl)
+library(googlesheets4) 
+library(openxlsx) 
+library(gt) 
+library(stringi) 
+library(lubridate)  
+library(skimr)
+library(maditr)
+library(naniar) 
+library(skimr)
+library(lubridate)
+library(openxlsx)
+library(dplyr)
+library(lubridate)
+
+
+```
+
+
+##Data
+```{r}
+
+TPV_agosto <- "https://docs.google.com/spreadsheets/d/1levx7_izh9Mn9zBZRc4ybcsIvRvZL8YmjEkpAzyZpB4/edit?gid=1877654120#gid=1877654120"
+
+Agosto<-read_sheet(TPV_agosto, 
+           range = "Avance_Asesores_ac_M0")
+
+BPD_file <- "https://docs.google.com/spreadsheets/d/11rQ3QUYtG4vnL2vA1NJGOXRKhkvQwDt-DvZEVGSs1P4/edit?gid=0#gid=0"
+
+```
+## Calculo de porcentaje y monto (topado a 4k) sin excluir elegibilidad por sistema de comisiones 
+
+```{r}
+
+Agosto$porcentaje <- ifelse(Agosto$dias_en_fdv_cierremes >= 91, 0,
+          ifelse(Agosto$dias_en_fdv_cierremes >= 60 & Agosto$dias_en_fdv_cierremes < 91, 0.02,
+          ifelse(Agosto$dias_en_fdv_cierremes >= 30 & Agosto$dias_en_fdv_cierremes < 61, 0.03,
+          ifelse(Agosto$dias_en_fdv_cierremes >= 1 & Agosto$dias_en_fdv_cierremes < 31, 0.04, NA))))
+
+
+Agosto$monto_bono_final <- ifelse(Agosto$terminales_candado5000_NEW_SELLER_confirmado>=1,  pmin(Agosto$porcentaje * Agosto$sumaTPV_NEW_SELLER_2024_confirmado, 4000),0)
+
+
+write_sheet(Agosto, ss= BPD_file , sheet = "Bono_Desarrollo")
+
+
+```
+
